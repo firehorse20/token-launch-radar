@@ -1,0 +1,61 @@
+Token Radar — build notes (2026-11-20)
+
+What was built: a token-radar-01 entry ("Build the best token launch radar",
+$1,325, deadline 2026-12-14 10:00 UTC) in ~/workspace/makefun/token-radar-entry/,
+for account nimble-puffin-17. Nothing was submitted and no GitHub push was made.
+
+Model (lib/model.ts, version radar-2, written from scratch):
+- Reads the sealed snapshot (758 protocols, 40 on the watchlist, floor $50M).
+- Ranks every rankable pre-token protocol: the whole watchlist plus all 158
+  rankable pre-token protocols below the floor, 198 rows, no arbitrary cap.
+  Rankable = no token recorded (mcap, gecko_id, symbol all null), not a
+  wrapped/staked/bridged product (category, name words, exchange-name rule),
+  name does not end in a version marker.
+- Implied value = TVL x per-category multiple x growth multiplier (7d change
+  clamped -60..+120, weight 0.5) x maturity multiplier (age with no token,
+  0.6..1.0 over 1095 days, unknown age 365) x chain-breadth multiplier
+  (1 + 0.02 per extra chain, up to 5). No protocol name is special-cased.
+- Every row carries a 7-step farm plan derived from its category, chains, TVL
+  and age (action, second action, weekly action, hold, claim, log), each step
+  20..600 characters with a cost and a time.
+- Live-token protocols (top 24 by market cap) are set aside, never ranked.
+
+Dashboard (dashboard/index.html, app.css, app.js, written from scratch):
+- Dark radar theme. Top-5 spotlight, category summary, full board table.
+- Search; filters by category, chain, minimum TVL, minimum implied value;
+  sorting by implied value, TVL, 7d growth, age, name; Pre-token / Live token
+  tabs; detail panel for every protocol with the model's own inputs (the page
+  recomputes each row and checks it against board.json) and its farm plan
+  with a copy button; model sandbox sliders (category-multiple scale,
+  growth weight) that recompute the table live.
+- No network requests, no http/https strings in the dashboard source.
+  Dashboard source totals 41,269 bytes (dossier text cap 65,536).
+
+Tests run 2026-11-20:
+- MAKEFUN_OUTPUT_DIR=out node main.ts (snapshot from the kit): 198 rows,
+  watchlist 40/40 covered, ranks 1..198, implied values strictly
+  non-increasing, every farm step 20..600 chars, max implied $574,079,701.
+- Determinism: two runs write byte-identical board.json, data.js and
+  dossier.json (sha256 compared).
+- Headless Chromium (Playwright + stock Chromium): board renders 198 rows;
+  clicking a row opens the detail panel (Steakhouse Financial, 7 steps, page
+  recompute matches board.json exactly); Dexs filter shows 21 rows; sandbox
+  slider 2x moves top implied $574.1M to $1.15B; Live token tab shows 24
+  rows; 0 console errors, 0 failed requests, 0 external requests.
+- Screenshots (real, from the running dashboard, 1440x900 JPEG):
+  1-board.jpg 93,777 bytes, 2-detail.jpg 133,217 bytes,
+  3-filtered.jpg 85,364 bytes (each under the 512 KiB cap).
+- dossier.json 459,230 bytes (cap 1.5 MiB), text 41,533 bytes (cap 65,536),
+  no cut, cover is 1-board.jpg.
+
+Files: main.ts, lib/model.ts, dashboard/ (index.html, app.css, app.js),
+vendor/makefun-board.ts (copied from the kit starter unchanged, md5 verified),
+LICENSE (MIT, nimble-puffin-17), README.md (three live make.fun badges for
+token-radar-01, owner firehorse20, repo token-launch-radar, referral
+v8c8hxj0), .makefun/owner.json (wallet
+7WcAnQUUqtTePiTcmknQb2PHt4SpgWGFmA11Vg1izmFj), screenshots/ (3 JPEGs),
+transcripts/BUILD-NOTES.txt (this file).
+
+The kit's starter was used only as a layout reference for the data shape and
+the dossier format; main.ts, lib/model.ts and dashboard/ were written from
+scratch. RULES.txt and skill.md files were not read.
